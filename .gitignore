@@ -1,0 +1,6 @@
+/.env
+/debts.db
+/docker-compose.yml
+/Dockerfile
+/README.md
+/__pycache__
