@@ -6,6 +6,8 @@ WORKDIR /app
 
 # Kopiujemy pliki bota
 COPY bot.py requirements.txt ./
+COPY repository.py ./
+COPY emojis.py ./
 COPY .env ./
 
 # Instalujemy wymagane biblioteki

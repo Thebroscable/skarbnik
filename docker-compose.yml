@@ -7,5 +7,5 @@ services:
     env_file:
       - .env
     volumes:
-      - /mnt/media/discord-bots/debts.db:/app/debts.db
+      - /opt/skarbnik:/data
     restart: unless-stopped
