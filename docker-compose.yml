@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  discord-bot:
+    build: .
+    container_name: discord-bot-skarbnik
+    env_file:
+      - .env
+    volumes:
+      - /mnt/media/discord-bots/debts.db:/app/debts.db
+    restart: unless-stopped
