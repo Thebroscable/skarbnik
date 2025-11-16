@@ -72,16 +72,30 @@ def get_user_debts(user_id):
     conn.close()
     return rows
 
+# Lista wszystkich długów zgrupowana
+def get_all_debts():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT d.debtor_id, u.username, u.phone, d.amount, d.paid_amount, d.description
+        FROM debts d
+        JOIN users u ON d.creditor_id = u.user_id
+        WHERE d.is_paid = 0
+        ORDER BY u.username
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
 # Lista długów użytkownika względem kredytodawcy
 def get_user_debts_for_creditor(debtor_id, creditor_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT d.debt_id, d.amount, d.paid_amount
-        FROM debts d
-        JOIN users u ON d.creditor_id = u.user_id
-        WHERE d.debtor_id = ? AND d.creditor_id = ? AND d.is_paid = 0
-        ORDER BY u.username
+        SELECT debt_id, amount, paid_amount
+        FROM debts
+        WHERE debtor_id = ? AND creditor_id = ? AND is_paid = 0
+        ORDER BY created_at
     """, (debtor_id, creditor_id))
     rows = cursor.fetchall()
     conn.close()

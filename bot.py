@@ -1,11 +1,13 @@
 import os
-
 import discord
+import asyncio
+
 from dotenv import load_dotenv
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
+from datetime import datetime, time, timedelta
 
-import utils
+import emojis
 import repository
 
 # Wczytanie tokenu
@@ -16,13 +18,43 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+async def wait_until(hour: int, minute: int):
+    now = datetime.now()
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    if target <= now:
+        target += timedelta(days=1)
+
+    await asyncio.sleep((target - now).total_seconds())
+
+@tasks.loop(hours=24)
+async def daily_debt_reminder():
+    debts = repository.get_all_debts()
+
+    for debtor_id, creditor_name, phone, amount, paid_amount, description in debts:
+        try:
+            user = await bot.fetch_user(int(debtor_id))
+            await user.send(f"📢 **Przypomnienie:** Masz dług **{round(amount-paid_amount, 2)} zł** u {creditor_name}\n **Numer do przelewu:** {phone}\n **Opis:** {description}")
+        except Exception as e:
+            print(f"Nie udało się wysłać DM do {debtor_id}: {e}")
+
+@bot.tree.command(name="test_dm")
+async def test_dm(interaction: discord.Interaction):
+    await interaction.user.send("Działa DM! 🎉")
+    await interaction.response.send_message("Sprawdź swoją skrzynkę prywatnych wiadomości 📩")
+    await daily_debt_reminder()
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     repository.init_db()
     print(f'{bot.user} has initialized DB!')
     await bot.tree.sync()
-    print(f"{bot.user} is ready!")
+    print(f"{bot.user} tree is ready!")
+
+    await wait_until(18, 0)
+    daily_debt_reminder.start()
+    print("Scheduler started!")
 
 # /add_debt <debtor> <amount> <description>
 @bot.tree.command(name="add_debt", description="Dodaj dług dla użytkownika")
@@ -45,7 +77,7 @@ async def add_debt(interaction: discord.Interaction, debtor: discord.Member, amo
     repository.add_debt(debtor_id, creditor_id, rounded_amount, description)
 
     await interaction.response.send_message(
-        f"**Dodano dług:** {debtor.mention} jest ci winien {rounded_amount} zł. {utils.emoji_CoTypierdolisz} \n**Opis:** {description}"
+        f"**Dodano dług:** {debtor.mention} jest ci winien {rounded_amount} zł. {emojis.emoji_CoTypierdolisz} \n**Opis:** {description}"
     )
 
 # /register <numer>
@@ -58,7 +90,7 @@ async def register(interaction: discord.Interaction, phone: str):
     repository.register_user(user_id, username, phone)
 
     await interaction.response.send_message(
-        f"{interaction.user.mention}, został zarejestrowany z numerem telefonu {phone} {utils.emoji_haGay}"
+        f"{interaction.user.mention}, został zarejestrowany z numerem telefonu {phone} {emojis.emoji_haGay}"
     )
 
 # /debt
@@ -68,7 +100,7 @@ async def debt(interaction: discord.Interaction):
     debts = repository.get_user_debts(user_id)
 
     if not debts:
-        await interaction.response.send_message(f"Nie masz żadnych długów. {utils.emoji_AaaKurwy}")
+        await interaction.response.send_message(f"Nie masz żadnych długów. {emojis.emoji_AaaKurwy}")
         return
     
     grouped = {}
@@ -99,7 +131,7 @@ async def credit(interaction: discord.Interaction):
     credit = repository.get_user_credit(user_id)
 
     if not credit:
-        await interaction.response.send_message(f"Nikt nie jest Ci dłużny. {utils.emoji_Alejaktobezwazeliny}")
+        await interaction.response.send_message(f"Nikt nie jest Ci dłużny. {emojis.emoji_Alejaktobezwazeliny}")
         return
 
     grouped = {}
@@ -169,7 +201,7 @@ async def pay(interaction: discord.Interaction, creditor: discord.Member, paid: 
 
     if not debts:
         await interaction.response.send_message(
-            f"Nie masz żadnych nieopłaconych długów względem tej osoby. Nie gadaj, że i tak przelałeś kase? Ale frajer... {utils.emoji_skanerrage}"
+            f"Nie masz żadnych nieopłaconych długów względem tej osoby. Nie gadaj, że i tak przelałeś kase? Ale frajer... {emojis.emoji_skanerrage}"
         )
     else:
         remain = round(paid, 2)
@@ -193,15 +225,15 @@ async def pay(interaction: discord.Interaction, creditor: discord.Member, paid: 
 
         if missing > 0:
             await interaction.response.send_message(
-                f"Spłacono część długu. Brakuje jeszcze {missing:.2f} zł. {utils.emoji_awryjniechcesz}"
+                f"Spłacono część długu. Brakuje jeszcze {missing:.2f} zł. {emojis.emoji_awryjniechcesz}"
             )
         elif remain > 0:
             await interaction.response.send_message(
-                f"Wszystkie długi u {creditor.mention} zostały spłacone. Nadpłata: **{remain:.2f} zł**. {utils.emoji_AllahuAkbar}"
+                f"Wszystkie długi u {creditor.mention} zostały spłacone. Nadpłata: **{remain:.2f} zł**. {emojis.emoji_AllahuAkbar}"
             )
         else:
             await interaction.response.send_message(
-                f"Wszystkie długi u {creditor.mention} zostały spłacone. {utils.emoji_amen}"
+                f"Wszystkie długi u {creditor.mention} zostały spłacone. {emojis.emoji_amen}"
             )
     
 bot.run(TOKEN)
