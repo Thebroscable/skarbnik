@@ -3,8 +3,8 @@
 1. Sklonuj repozytorium na serwer:
 
 ```bash
-git clone https://github.com/Thebroscable/smieszek
-cd smieszek
+git clone https://github.com/Thebroscable/skarbnik
+cd skarbnik
 ```
 
 2. Budowanie obrazu i uruchomienie kontenera:
