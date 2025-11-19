@@ -188,7 +188,7 @@ async def split(interaction: discord.Interaction, amount: float, description: st
     debtor="Użytkownik, który zapłacił",
     paid="Kwota wysłana przez użytkownika"
 )
-async def pay(interaction: discord.Interaction, debtor: discord.Member, paid: float):
+async def paid(interaction: discord.Interaction, debtor: discord.Member, paid: float):
     """
     Spłaca długi użytkownika debtor_id względem creditor_id.
     Spłaca od najstarszego długu.
