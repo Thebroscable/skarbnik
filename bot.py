@@ -62,9 +62,7 @@ async def add_debt(interaction: discord.Interaction, debtor: discord.Member, amo
     debtor_id = str(debtor.id)
 
     if amount > 1000:
-        await interaction.response.send_message(
-            f"Chyba cie pojebało dziewczynko...."
-        )   
+        await interaction.response.send_message(f"Chyba cie pojebało dziewczynko....")   
 
     repository.ensure_user_exists(debtor_id, debtor.display_name)
     repository.ensure_user_exists(creditor_id, interaction.user.display_name)
