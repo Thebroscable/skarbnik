@@ -183,7 +183,7 @@ async def split(interaction: discord.Interaction, amount: float, description: st
     )
 
 # /paid <creditor> <amount>
-@bot.tree.command(name="paid", description="Użytkownik wysłał pieniądze")
+@bot.tree.command(name="pay_me", description="Użytkownik wysłał pieniądze")
 @app_commands.describe(
     debtor="Użytkownik, który zapłacił",
     paid="Kwota wysłana przez użytkownika"
@@ -215,8 +215,8 @@ async def paid(interaction: discord.Interaction, debtor: discord.Member, paid: f
                 remain = round(remain - left, 2)
             else:
                 new_paid = round(paid_amount + remain, 2)
-                remain = 0
                 missing = round(left - remain, 2)
+                remain = 0
                 repository.pay_debt_partial(debt_id, new_paid)
 
 
