@@ -222,7 +222,7 @@ async def paid(interaction: discord.Interaction, debtor: discord.Member, paid: f
 
         if missing > 0:
             await interaction.response.send_message(
-                f"Spłacono część długu {debtor.mention} względem {interaction.user.mention}. Brakuje jeszcze {missing:.2f} zł. {emojis.emoji_awryjniechcesz}"
+                f"Spłacono część długu {debtor.mention} względem {interaction.user.mention}. Brakuje jeszcze **{missing:.2f} zł**. {emojis.emoji_awryjniechcesz}"
             )
         elif remain > 0:
             await interaction.response.send_message(
