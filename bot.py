@@ -38,12 +38,6 @@ async def daily_debt_reminder():
         except Exception as e:
             print(f"Nie udało się wysłać DM do {debtor_id}: {e}")
 
-@bot.tree.command(name="test_dm")
-async def test_dm(interaction: discord.Interaction):
-    await interaction.user.send("Działa DM! 🎉")
-    await interaction.response.send_message("Sprawdź swoją skrzynkę prywatnych wiadomości 📩")
-    await daily_debt_reminder()
-
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
@@ -77,7 +71,7 @@ async def add_debt(interaction: discord.Interaction, debtor: discord.Member, amo
     repository.add_debt(debtor_id, creditor_id, rounded_amount, description)
 
     await interaction.response.send_message(
-        f"**Dodano dług:** {debtor.mention} jest ci winien {rounded_amount} zł. {emojis.emoji_CoTypierdolisz} \n**Opis:** {description}"
+        f"**Dodano dług:** {debtor.mention} jest winien {interaction.user.mention} **{rounded_amount} zł**. {emojis.emoji_CoTypierdolisz} \n**Opis:** {description}"
     )
 
 # /register <numer>
@@ -185,23 +179,23 @@ async def split(interaction: discord.Interaction, amount: float, description: st
         f"Podzielono kwotę **{amount} zł** *({per_person} zł na osobę)* między: {debtors_list}\n**Opis:** {description}"
     )
 
-# /pay <creditor> <amount>
-@bot.tree.command(name="pay", description="Spłać dług u użytkownika")
+# /paid <creditor> <amount>
+@bot.tree.command(name="paid", description="Użytkownik wysłał pieniądze")
 @app_commands.describe(
-    creditor="Użytkownik, któremu trzeba zapłacić",
-    paid="Kwota wysłana do użytkownika"
+    debtor="Użytkownik, który zapłacił",
+    paid="Kwota wysłana przez użytkownika"
 )
-async def pay(interaction: discord.Interaction, creditor: discord.Member, paid: float):
+async def pay(interaction: discord.Interaction, debtor: discord.Member, paid: float):
     """
     Spłaca długi użytkownika debtor_id względem creditor_id.
     Spłaca od najstarszego długu.
     Zwraca komunikat tekstowy.
     """
-    debts = repository.get_user_debts_for_creditor(interaction.user.id, creditor.id)
+    debts = repository.get_debts_between_users(interaction.user.id, debtor.id)
 
     if not debts:
         await interaction.response.send_message(
-            f"Nie masz żadnych nieopłaconych długów względem tej osoby. Nie gadaj, że i tak przelałeś kase? Ale frajer... {emojis.emoji_skanerrage}"
+            f"{debtor.name} nie miał u ciebie żadnego długu... {emojis.emoji_skanerrage}"
         )
     else:
         remain = round(paid, 2)
@@ -225,15 +219,15 @@ async def pay(interaction: discord.Interaction, creditor: discord.Member, paid: 
 
         if missing > 0:
             await interaction.response.send_message(
-                f"Spłacono część długu. Brakuje jeszcze {missing:.2f} zł. {emojis.emoji_awryjniechcesz}"
+                f"Spłacono część długu {debtor.mention} względem {interaction.user.mention}. Brakuje jeszcze {missing:.2f} zł. {emojis.emoji_awryjniechcesz}"
             )
         elif remain > 0:
             await interaction.response.send_message(
-                f"Wszystkie długi u {creditor.mention} zostały spłacone. Nadpłata: **{remain:.2f} zł**. {emojis.emoji_AllahuAkbar}"
+                f"Wszystkie długi {debtor.mention} względem {interaction.user.mention} zostały spłacone. Nadpłata: **{remain:.2f} zł**. {emojis.emoji_AllahuAkbar}"
             )
         else:
             await interaction.response.send_message(
-                f"Wszystkie długi u {creditor.mention} zostały spłacone. {emojis.emoji_amen}"
+                f"Wszystkie długi {debtor.mention} względem {interaction.user.mention} zostały spłacone. {emojis.emoji_amen}"
             )
     
 bot.run(TOKEN)

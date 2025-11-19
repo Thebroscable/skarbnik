@@ -88,7 +88,7 @@ def get_all_debts():
     return rows
 
 # Lista długów użytkownika względem kredytodawcy
-def get_user_debts_for_creditor(debtor_id, creditor_id):
+def get_debts_between_users(creditor_id, debtor_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
